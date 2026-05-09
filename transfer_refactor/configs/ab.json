@@ -1,0 +1,14 @@
+{
+  "pair": "ab",
+  "source_sat": "fy4a",
+  "target_sat": "fy4b",
+  "input_globs": ["../convolution_result/fy4a_fy4b_convolution/*_sat_rad.csv"],
+  "output_coeffs": "../transfer_result/transfer_coeff_fy4a_fy4b.csv",
+  "plot_dir": "../fitting_result/line_plots_fy4a_fy4b",
+  "r_threshold": 0.98,
+  "polynomial_degree": 2,
+  "data_field": "Radiance",
+  "fallback_field": "BT",
+  "convert_modtran_radiance": true,
+  "make_plots": true
+}

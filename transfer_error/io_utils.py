@@ -25,17 +25,8 @@ def load_radiance_data(csv_list: List[str]) -> Dict[str, np.ndarray]:
     matching ``*_Radiance`` are collected and returned as flat float64 arrays,
     keyed by the channel full-name (e.g. ``"fy4a_ch01"``).
 
-    Parameters
-    ----------
-    csv_list : list of str
-        Paths to CSV files.
-
-    Returns
-    -------
-    dict[str, np.ndarray]
-        Mapping ``channel_name → 1-D array of radiance values``.
-        Radiance is kept in **original units** (W·cm⁻²·sr⁻¹·cm).  Callers
-        are responsible for the Jacobian transform.
+    Radiance is kept in **original units** (W·cm⁻²·sr⁻¹·cm).  Callers are
+    responsible for the Jacobian transform.
     """
     accum: Dict[str, List[float]] = {}
 
@@ -49,7 +40,6 @@ def load_radiance_data(csv_list: List[str]) -> Dict[str, np.ndarray]:
             reader = csv.DictReader(fh)
             fields = reader.fieldnames or []
 
-            # Identify radiance columns
             rad_cols = [c for c in fields if c.endswith("_Radiance")]
             if not rad_cols:
                 print(f"Warning: no *_Radiance columns in {path_str}, skipping")
@@ -123,16 +113,18 @@ _RESULT_COLUMNS = [
     "dy_mean",
     "dy_p95",
     "rel_err_mean",
+    "rel_err_p95",
     "dTb_mean",
     "dTb_p95",
 ]
 
 
 def save_results(results: List[dict], output_path: str) -> None:
-    """Write the sensitivity results to a CSV file."""
+    """Write sensitivity results (one row per channel × perturbation)."""
     out_p = Path(output_path)
     out_p.parent.mkdir(parents=True, exist_ok=True)
     with open(out_p, "w", newline="", encoding="utf-8") as fh:
-        writer = csv.DictWriter(fh, fieldnames=_RESULT_COLUMNS)
+        writer = csv.DictWriter(fh, fieldnames=_RESULT_COLUMNS,
+                                extrasaction="ignore")
         writer.writeheader()
         writer.writerows(results)

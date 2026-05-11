@@ -96,27 +96,29 @@ def brightness_temperature(L: np.ndarray, lam_um: float) -> np.ndarray:
 
 # ---------- dL / dTb --------------------------------------------------------
 
-def dL_dTb(T: float, lam_um: float) -> float:
-    """Derivative of the Planck radiance w.r.t. temperature.
+def dL_dTb(T, lam_um):
+    """Derivative of the Planck radiance w.r.t. temperature (vectorised).
 
     .. math::
         ∂L/∂T = (c1·c2 / λ⁶·T²) · exp(c2/λT) / [exp(c2/λT) − 1]²
 
     Parameters
     ----------
-    T : float
+    T : float or ndarray
         Temperature in K.
     lam_um : float
         Wavelength in µm.
 
     Returns
     -------
-    float
+    float or ndarray
         ∂L/∂T  in  W·m⁻²·sr⁻¹·µm⁻¹·K⁻¹.
     """
+    T_arr = np.asarray(T, dtype=np.float64)
+    scalar = T_arr.ndim == 0
     lam6 = lam_um ** 6
-    x = C2_UM / (lam_um * T)
-    if x > 500.0:
-        return 0.0
+    x = C2_UM / (lam_um * T_arr)
+    x = np.clip(x, None, 500.0)
     ex = np.exp(x)
-    return (C1_UM * C2_UM) / (lam6 * T * T) * ex / ((ex - 1.0) ** 2)
+    result = (C1_UM * C2_UM) / (lam6 * T_arr * T_arr) * ex / ((ex - 1.0) ** 2)
+    return float(result) if scalar else result

@@ -17,19 +17,30 @@ from typing import List
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+from matplotlib.cm import get_cmap
+import matplotlib.colors as mcolors
 
 from .config import get_wavelength_um
 
 # ---------------------------------------------------------------------------
 # Palette — one colour per channel index, consistent across panels
 # ---------------------------------------------------------------------------
+# _CH_COLOURS = [
+#     "#2166AC", "#D6604D", "#4DAF4A", "#984EA3",
+#     "#FF7F00", "#377EB8", "#E41A1C", "#4D4D4D",
+#     "#A65628", "#F781BF", "#66C2A5", "#FC8D62",
+#     "#8DA0CB", "#E78AC3", "#A6D854",
+# ]
+
 _CH_COLOURS = [
-    "#2166AC", "#D6604D", "#4DAF4A", "#984EA3",
-    "#FF7F00", "#377EB8", "#E41A1C", "#4D4D4D",
-    "#A65628", "#F781BF", "#66C2A5", "#FC8D62",
-    "#8DA0CB", "#E78AC3", "#A6D854",
+    "#0072B2", "#E69F00", "#009E73", "#CC79A7",
+    "#56B4E9", "#D55E00", "#E41A1C", "#000000",
 ]
 
+cmap = get_cmap("GnBu")
+cmap_clipped = mcolors.LinearSegmentedColormap.from_list(
+    "GnBu_clip", cmap(np.linspace(0.2, 1.0, 256))
+)
 
 def _configure_style() -> None:
     plt.rcParams.update({
@@ -110,10 +121,10 @@ def _panel_refl_line(ax, results: List[dict], satellite: str) -> None:
 
     ax.set_xlabel("Perturbation fraction  (%)")
     ax.set_ylabel("Mean relative output error  (%)")
-    ax.set_title("A  Reflective channels")
+    ax.set_title("(A)  Reflective channels")
     ax.set_xlim(left=0)
     ax.set_ylim(bottom=0)
-    ax.legend(loc="upper left", frameon=True, ncol=2)
+    ax.legend(loc="upper left", frameon=False, ncol=2)
     ax.tick_params(direction="in")
 
 
@@ -148,10 +159,10 @@ def _panel_ir_line(ax, results: List[dict], satellite: str) -> None:
 
     ax.set_xlabel("Input perturbation  $\\Delta K$  (K)")
     ax.set_ylabel("Mean  $|\\delta T_b|$  (K)")
-    ax.set_title("B  Infrared channels")
+    ax.set_title("(B)  Infrared channels")
     ax.set_xlim(left=0)
     ax.set_ylim(bottom=0)
-    ax.legend(loc="upper left", frameon=True, ncol=2)
+    ax.legend(loc="upper left", frameon=False, ncol=2)
     ax.tick_params(direction="in")
 
 
@@ -182,7 +193,7 @@ def _panel_refl_heatmap(ax, results: List[dict], satellite: str) -> None:
 
     x_edges = np.arange(n_pt + 1) - 0.5
     y_edges = np.arange(n_ch + 1) - 0.5
-    im = ax.pcolormesh(x_edges, y_edges, mat, cmap="YlOrRd",
+    im = ax.pcolormesh(x_edges, y_edges, mat, cmap=cmap_clipped,
                        edgecolors="black", linewidth=0.6, antialiased=False)
 
     ax.set_xticks(range(n_pt))
@@ -190,7 +201,7 @@ def _panel_refl_heatmap(ax, results: List[dict], satellite: str) -> None:
     ax.set_yticks(range(n_ch))
     ax.set_yticklabels([_ch_short(c) for c in channels])
     ax.set_xlabel("Perturbation fraction")
-    ax.set_title("C  Reflective — rel_err_mean (%)")
+    ax.set_title("(C)  Reflective — rel_err_mean (%)")
 
     cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     cbar.ax.tick_params(labelsize=6)
@@ -200,7 +211,10 @@ def _panel_refl_heatmap(ax, results: List[dict], satellite: str) -> None:
             v = mat[i, j]
             if np.isfinite(v):
                 ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        fontsize=5.2, color="white" if v > 0.5 * np.nanmax(mat) else "black")
+                        fontsize=5.2,
+                        color="white" if v > 0.5 * np.nanmax(mat) else "black"
+                        # color= "black"
+                        )
 
 
 # ---------------------------------------------------------------------------
@@ -230,7 +244,7 @@ def _panel_ir_heatmap(ax, results: List[dict], satellite: str) -> None:
 
     x_edges = np.arange(n_pt + 1) - 0.5
     y_edges = np.arange(n_ch + 1) - 0.5
-    im = ax.pcolormesh(x_edges, y_edges, mat, cmap="YlOrRd",
+    im = ax.pcolormesh(x_edges, y_edges, mat, cmap=cmap_clipped,
                        edgecolors="black", linewidth=0.6, antialiased=False)
 
     ax.set_xticks(range(n_pt))
@@ -238,7 +252,7 @@ def _panel_ir_heatmap(ax, results: List[dict], satellite: str) -> None:
     ax.set_yticks(range(n_ch))
     ax.set_yticklabels([_ch_short(c) for c in channels])
     ax.set_xlabel("$\\Delta K$  (K)")
-    ax.set_title("D  IR — dTb_mean (K)")
+    ax.set_title("(D)  IR — dTb_mean (K)")
 
     cbar = plt.colorbar(im, ax=ax, fraction=0.046, pad=0.02)
     cbar.ax.tick_params(labelsize=6)
@@ -248,7 +262,9 @@ def _panel_ir_heatmap(ax, results: List[dict], satellite: str) -> None:
             if np.isfinite(v):
                 ax.text(j, i, f"{v:.3f}", ha="center", va="center",
                         fontsize=5.2,
-                        color="black" if v > 0.5 * np.nanmax(mat) else "black")
+                        # color="black"
+                        color="white" if v > 0.5 * np.nanmax(mat) else "black"
+                        )
 
 
 # ---------------------------------------------------------------------------
@@ -271,8 +287,8 @@ def make_figure(results: List[dict], satellite: str, output_dir: str) -> str:
     _panel_refl_heatmap(ax_c, results, satellite)
     _panel_ir_heatmap(ax_d, results, satellite)
 
-    fig.suptitle(f"Transfer-model sensitivity  —  {sat_label} source channels",
-                 fontsize=9.5, fontweight="bold", y=1.01)
+    # fig.suptitle(f"Transfer-model sensitivity  —  {sat_label} source channels",
+    #              fontsize=9.5, fontweight="bold", y=1.01)
 
     fig.tight_layout()
     out = Path(output_dir) / f"fig_sensitivity_{satellite}.png"

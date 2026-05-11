@@ -71,11 +71,15 @@ def load_coefficients(csv_path: str) -> List[dict]:
     """Load the transfer-coefficient table.
 
     Expected columns: Source_Ch, Target_Ch, Direction, Model,
-                      Coeff_1, Coeff_2, Intercept, R, Residual_Std  (last two unused)
+                      Coeff_1, Coeff_2, Intercept, R, Residual_Std.
+
+    Optional columns: S_t, Q_t, S_r, Q_r  — Planck correction coefficients
+    for IR channels (default: 1, 0, 1, 0).  Absent columns → defaults.
 
     Returns a list of dicts, one per row, with keys:
         source_ch, target_ch, direction, model_type,
-        coeff1, coeff2, intercept
+        coeff1, coeff2, intercept, residual_std,
+        S_t, Q_t, S_r, Q_r
     """
     rows: List[dict] = []
     p = Path(csv_path)
@@ -95,6 +99,11 @@ def load_coefficients(csv_path: str) -> List[dict]:
                     "coeff1": float(row["Coeff_1"].strip()),
                     "coeff2": float(coeff2_raw) if coeff2_raw else None,
                     "intercept": float(row["Intercept"].strip()),
+                    "S_t": float(row["S_t"].strip()) if row.get("S_t", "").strip() else 1.0,
+                    "Q_t": float(row["Q_t"].strip()) if row.get("Q_t", "").strip() else 0.0,
+                    "S_r": float(row["S_r"].strip()) if row.get("S_r", "").strip() else 1.0,
+                    "Q_r": float(row["Q_r"].strip()) if row.get("Q_r", "").strip() else 0.0,
+                    "residual_std": float(row["Residual_Std"].strip()) if row.get("Residual_Std", "").strip() else 0.0,
                 }
             except (KeyError, ValueError) as exc:
                 print(f"Warning: malformed coefficient row {row}, error: {exc}")
@@ -112,10 +121,13 @@ _RESULT_COLUMNS = [
     "perturbation_label",
     "dy_mean",
     "dy_p95",
+    "dy_std",
+    "dy_rms",
     "rel_err_mean",
     "rel_err_p95",
     "dTb_mean",
     "dTb_p95",
+    "dTb_std",
 ]
 
 

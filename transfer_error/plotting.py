@@ -61,14 +61,14 @@ def _configure_style() -> None:
 
 def _ch_short(ch: str) -> str:
     """Very short: 'ch01'."""
-    return ch.split("_")[1]
+    # return ch.split("_")[1]
+    # Return center wavelength string, e.g. '0.47 μm'.
+    wl = get_wavelength_um(ch)  # ch 本身就是 "fy4a_ch01" 这样的完整名
+    return f"{wl:.2f} μm"
 
 
 def _sat_tag(ch: str) -> str:
     return ch.split("_")[0]
-
-
-
 
 # ---------------------------------------------------------------------------
 # Panel A / B: reflective heatmap (bidirectional)
@@ -190,9 +190,19 @@ def make_all_figures(results: List[dict], output_dir: str) -> List[str]:
     _panel_ir_heatmap(ax_d, results, "fy4b", "B→A")
 
     fig.tight_layout()
-    out = Path(output_dir) / "fig_sensitivity_bidirectional.png"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out)
+    # out = Path(output_dir) / "fig_sensitivity_bidirectional.png"
+    # out.parent.mkdir(parents=True, exist_ok=True)
+    # fig.savefig(out)
+    # plt.close(fig)
+    # print(f"  saved {out}")
+    # return [str(out)]
+    out_dir = Path(output_dir)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    saved = []
+    for fmt in ("svg", "pdf", "png"):
+        out = out_dir / f"fig_sensitivity_bidirectional.{fmt}"
+        fig.savefig(out, format=fmt)
+        print(f"  saved {out}")
+        saved.append(str(out))
     plt.close(fig)
-    print(f"  saved {out}")
-    return [str(out)]
+    return saved
